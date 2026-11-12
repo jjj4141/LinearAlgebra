@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>플랫랜드로 이해하는 4차원: 구의 통과</title>
+<style>
+:root{--bg:#fff;--fg:#1f1e1d;--sub:#5f5e5a;--line:#b4b2a9;--card:#f4f2ec;--tealF:#E1F5EE;--tealS:#0F6E56;--tealT:#085041;--purF:#EEEDFE;--purS:#534AB7;--purT:#3C3489;--chord:#D85A30}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1b19;--fg:#ece9e0;--sub:#a8a69c;--line:#6b6a64;--card:#2a2926;--tealF:#085041;--tealS:#5DCAA5;--tealT:#9FE1CB;--purF:#3C3489;--purS:#AFA9EC;--purT:#CECBF6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;font-weight:500;margin:0 0 4px}
+p.lead{margin:0 0 20px;color:var(--sub);font-size:15px}
+.ctl{display:flex;align-items:center;gap:12px;margin:0 0 8px}
+.ctl input{flex:1}
+button{font:inherit;font-size:14px;padding:6px 14px;border:0.5px solid var(--line);background:transparent;color:var(--fg);border-radius:8px;cursor:pointer;min-width:64px}
+button:hover{background:var(--card)}
+#tv{font-size:13px;color:var(--sub);min-width:84px;text-align:right}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--fg);font-family:inherit}
+.ts{font-size:12px;fill:var(--sub)}
+.th{font-size:14px;font-weight:500}
+.box{fill:var(--card);stroke:var(--line);stroke-width:.5}
+.teal{fill:var(--tealF);stroke:var(--tealS)}
+.pur{fill:var(--purF);stroke:var(--purS)}
+.arr{stroke:var(--sub);stroke-width:1.5;fill:none}
+.note{margin-top:24px;font-size:15px}
+.note p{margin:0 0 10px}
+</style>
+</head>
+<body>
+<main>
+<h1>플랫랜드로 이해하는 4차원</h1>
+<p class="lead">구가 한 차원 낮은 세계를 통과할 때, 그 세계의 주민에게는 단면만 보입니다.</p>
+
+<div class="ctl">
+  <button id="play">재생</button>
+  <input type="range" id="sl" min="-150" max="150" value="-150" step="5" aria-label="구가 지나가는 위치">
+  <span id="tv"></span>
+</div>
+
+<svg viewBox="0 0 680 400" role="img" aria-label="구가 평면을 통과하는 과정">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<line x1="45" y1="165" x2="45" y2="25" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="55" y="30">z축</text>
+<line x1="30" y1="95" x2="215" y2="95" stroke="var(--sub)" stroke-width="2"/>
+<text class="ts" x="165" y="114">2차원 평면</text>
+<line id="chA" x1="120" y1="95" x2="120" y2="95" stroke="var(--chord)" stroke-width="4" stroke-linecap="round"/>
+<circle id="sA" class="teal" cx="120" cy="95" r="34" fill-opacity="0.25" stroke-width="1"/>
+<line x1="245" y1="95" x2="288" y2="95" class="arr" marker-end="url(#arrow)"/>
+<rect class="box" x="300" y="15" width="300" height="160" rx="8"/>
+<text class="th" x="312" y="34">플랫랜드에서 보이는 모습</text>
+<circle id="rA" class="teal" cx="450" cy="95" r="10" stroke-width="1"/>
+<text id="tA" class="ts" x="450" y="162" text-anchor="middle"></text>
+
+<line x1="45" y1="365" x2="45" y2="225" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="55" y="230">w축</text>
+<line x1="30" y1="295" x2="215" y2="295" stroke="var(--sub)" stroke-width="2"/>
+<text class="ts" x="165" y="314">3차원 공간</text>
+<line id="chB" x1="120" y1="295" x2="120" y2="295" stroke="var(--chord)" stroke-width="4" stroke-linecap="round"/>
+<circle id="sB" class="pur" cx="120" cy="295" r="34" fill-opacity="0.25" stroke-width="1"/>
+<line x1="245" y1="295" x2="288" y2="295" class="arr" marker-end="url(#arrow)"/>
+<rect class="box" x="300" y="215" width="300" height="160" rx="8"/>
+<text class="th" x="312" y="234">3차원 세계에서 보이는 모습</text>
+<circle id="rB" class="pur" cx="450" cy="295" r="10" stroke-width="1"/>
+<ellipse id="hB" cx="440" cy="285" rx="6" ry="4" fill="#fff" opacity="0.5"/>
+<text id="tB" class="ts" x="450" y="362" text-anchor="middle"></text>
+</svg>
+
+<svg id="strip" viewBox="0 0 680 330" role="img" aria-label="단면 변화 7장면" style="margin-top:20px"></svg>
+
+<div class="note">
+<p>3차원 구가 평면을 지나가면 평면 주민에게는 점이 나타나 → 원으로 커졌다가 → 다시 점으로 줄어들어 사라집니다. 같은 원리로 4차원 구가 우리 공간을 지나가면 작은 구가 나타나 → 커졌다가 → 줄어들어 사라집니다.</p>
+<p>중심이 평면(공간)에서 d만큼 떨어져 있을 때 단면의 반지름은 √(R² − d²)입니다.</p>
+</div>
+</main>
+
+<script>
+(function(){
+var S=document.getElementById('sl'),P=document.getElementById('play');
+function g(id){return document.getElementById(id);}
+function upd(){
+  var t=S.value/100,a=Math.abs(t);
+  var r=a<=1?Math.sqrt(1-t*t):null;
+  g('tv').textContent='위치 '+(t>0?'+':'')+t.toFixed(2);
+  [['A',95,55],['B',295,55]].forEach(function(o){
+    var k=o[0],cy=o[1],big=o[2];
+    g('s'+k).setAttribute('cy',cy+t*34);
+    var ch=g('ch'+k),rc=g('r'+k),tx=g('t'+k),h=g('h'+k);
+    if(r===null){
+      ch.setAttribute('visibility','hidden');rc.setAttribute('visibility','hidden');
+      if(h)h.setAttribute('visibility','hidden');
+      tx.textContent='아무것도 보이지 않음';
+    }else{
+      ch.setAttribute('visibility','visible');rc.setAttribute('visibility','visible');
+      ch.setAttribute('x1',120-r*34);ch.setAttribute('x2',120+r*34);
+      var rad=r===0?2.5:r*big;
+      rc.setAttribute('r',rad);
+      if(h){h.setAttribute('visibility',r===0?'hidden':'visible');
+        h.setAttribute('cx',450-rad*0.3);h.setAttribute('cy',cy-rad*0.3);
+        h.setAttribute('rx',rad*0.28);h.setAttribute('ry',rad*0.18);}
+      var nm=k==='A'?'원':'구';
+      tx.textContent=r===0?'점 하나':nm+'의 반지름 '+r.toFixed(2);
+    }
+  });
+}
+S.addEventListener('input',upd);
+var timer=null;
+P.addEventListener('click',function(){
+  if(timer){clearInterval(timer);timer=null;P.textContent='재생';return;}
+  P.textContent='멈춤';
+  if(+S.value>=150)S.value=-150;
+  timer=setInterval(function(){
+    var v=+S.value+3;
+    if(v>150){clearInterval(timer);timer=null;P.textContent='재생';return;}
+    S.value=v;upd();
+  },40);
+});
+upd();
+
+var ts=[-1,-0.87,-0.6,0,0.6,0.87,1],
+cA=['점','작은 원','큰 원','가장 큰 원','큰 원','작은 원','점'],
+cB=['점','작은 구','큰 구','가장 큰 구','큰 구','작은 구','점'];
+var h='<defs><marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+h+='<text class="th" x="15" y="14">2차원: 평면 위의 단면 변화</text>';
+h+='<text class="th" x="15" y="152">3차원: 공간 속의 단면 변화</text>';
+ts.forEach(function(t,i){
+  var r=Math.sqrt(Math.max(0,1-t*t)),x=15+i*95,cx=x+40,rad=r===0?2.5:r*32;
+  h+='<rect class="box" x="'+x+'" y="24" width="80" height="80" rx="6"/>';
+  h+='<circle class="teal" cx="'+cx+'" cy="64" r="'+rad+'" stroke-width="1"/>';
+  h+='<text class="ts" x="'+cx+'" y="122" text-anchor="middle">'+cA[i]+'</text>';
+  h+='<rect class="box" x="'+x+'" y="162" width="80" height="80" rx="6"/>';
+  h+='<circle class="pur" cx="'+cx+'" cy="202" r="'+rad+'" stroke-width="1"/>';
+  if(r>0)h+='<ellipse cx="'+(cx-rad*0.3)+'" cy="'+(202-rad*0.3)+'" rx="'+(rad*0.28)+'" ry="'+(rad*0.18)+'" fill="#fff" opacity="0.5"/>';
+  h+='<text class="ts" x="'+cx+'" y="260" text-anchor="middle">'+cB[i]+'</text>';
+});
+h+='<line x1="15" y1="292" x2="665" y2="292" class="arr" marker-end="url(#arrow2)"/>';
+h+='<text class="ts" x="340" y="316" text-anchor="middle">구가 지나가는 순서</text>';
+document.getElementById('strip').innerHTML=h;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><title>4차원 테서랙트</title>
+<style>
+body{margin:0;background:#0f172a;color:#e2e8f0;font-family:sans-serif;display:flex;flex-direction:column;align-items:center}
+h1{font-size:22px;margin:16px 0 4px}p{margin:4px;color:#94a3b8;font-size:14px;max-width:760px;text-align:center}
+.ctrl{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin:8px}
+label{font-size:14px}canvas{background:#111827;border-radius:12px;margin:8px}
+</style></head><body>
+<h1>4차원 정육면체(테서랙트)의 3D→2D 투영</h1>
+<p>점 16개, 모서리 32개로 이루어진 4D 정육면체를 그림자처럼 투영한 모습입니다. 파란색은 w=-1에 있는 정육면체, 빨간색은 w=+1에 있는 정육면체, 노란색은 w 방향(4번째 축)으로 이어진 모서리입니다.</p>
+<div class="ctrl">
+<label><input type="checkbox" id="xw" checked> XW 평면 회전</label>
+<label><input type="checkbox" id="yw"> YW 평면 회전</label>
+<label><input type="checkbox" id="zw"> ZW 평면 회전</label>
+<label><input type="checkbox" id="xy" checked> XY 평면 회전(일반 3D 회전)</label>
+<label>속도 <input type="range" id="sp" min="0" max="3" step="0.1" value="1"></label>
+</div>
+<canvas id="c" width="760" height="560"></canvas>
+<p>XY 회전만 켜면 평범한 3D 회전처럼 보입니다. XW, YW, ZW 회전을 켜면 안쪽 정육면체와 바깥쪽 정육면체가 서로 자리를 바꾸는데, 이것이 우리 공간에는 없는 4번째 방향으로 회전하는 모습입니다. 정육면체는 찌그러져 보이지만 실제 4D 모양은 변하지 않습니다.</p>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const V=[];for(let i=0;i<16;i++)V.push([i&1?1:-1,i&2?1:-1,i&4?1:-1,i&8?1:-1]);
+const E=[];for(let i=0;i<16;i++)for(let k=0;k<4;k++){const j=i^(1<<k);if(i<j)E.push([i,j,k]);}
+let t=0;
+function rot(p,a,b,th){const q=p.slice(),c=Math.cos(th),s=Math.sin(th);q[a]=p[a]*c-p[b]*s;q[b]=p[a]*s+p[b]*c;return q;}
+function frame(){
+ const sp=+document.getElementById('sp').value;t+=0.01*sp;
+ g.clearRect(0,0,c.width,c.height);
+ const P=V.map(v=>{let p=v;
+  if(xw.checked)p=rot(p,0,3,t);if(yw.checked)p=rot(p,1,3,t*0.7);if(zw.checked)p=rot(p,2,3,t*0.5);
+  if(xy.checked)p=rot(p,0,1,t*0.4);p=rot(p,1,2,0.5);
+  const k4=2.5/(3-p[3]);const x=p[0]*k4,y=p[1]*k4,z=p[2]*k4;
+  const k3=3/(4.5-z);return [380+x*k3*120,280+y*k3*120,v[3]];});
+ for(const [i,j,k] of E){g.lineWidth=2.2;
+  g.strokeStyle=k===3?'#facc15':(V[i][3]<0?'#60a5fa':'#f87171');
+  g.beginPath();g.moveTo(P[i][0],P[i][1]);g.lineTo(P[j][0],P[j][1]);g.stroke();}
+ for(const p of P){g.fillStyle='#fff';g.beginPath();g.arc(p[0],p[1],3.5,0,7);g.fill();}
+ requestAnimationFrame(frame);}
+frame();
+</script></body></html>

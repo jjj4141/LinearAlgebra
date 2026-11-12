@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>플랫랜드(Flatland) & 4차원 Span 인터랙티브 시뮬레이터</title>
+  <style>
+    :root {
+      --surface: #FDFDFF;
+      --card: #F4F6FA;
+      --ink: #1E2433;
+      --ink-2: #505A74;
+      --ink-muted: #737D96;
+      --grid: #E2E6F0;
+      --border: #CDD3E0;
+      --blue: #1751D0;
+      --orange: #E2661E;
+      --aqua: #0E9E8F;
+      --violet: #9117D0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "NanumGothic", "Malgun Gothic", sans-serif;
+      background-color: var(--surface);
+      color: var(--ink);
+      line-height: 1.55;
+      padding: 28px 24px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--grid);
+    }
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 0.98rem;
+      color: var(--ink-2);
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--ink-2);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+    .section-panel {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+    }
+    .section-panel.active {
+      display: block;
+    }
+    .control-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .slider-group {
+      flex: 1;
+      min-width: 260px;
+    }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+      cursor: pointer;
+      height: 6px;
+    }
+    .play-btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      background: var(--orange);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .canvas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 820px) {
+      .canvas-grid { grid-template-columns: 1fr; }
+    }
+    .canvas-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .canvas-card h3 {
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+      color: var(--ink);
+      text-align: center;
+    }
+    .canvas-card p.desc {
+      font-size: 0.85rem;
+      color: var(--ink-2);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    canvas {
+      background: #FAFBFD;
+      border: 1px solid var(--grid);
+      border-radius: 8px;
+      max-width: 100%;
+    }
+    .math-box {
+      margin-top: 16px;
+      background: var(--surface);
+      border-left: 4px solid var(--blue);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      color: var(--ink);
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #E8EEFB;
+      color: var(--blue);
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>플랫랜드(Flatland) & 4차원 Span 인터랙티브 시뮬레이터</h1>
+    <p class="subtitle">슬라이더(시간/숨겨진 차원 축)를 직접 움직여, 상위 차원의 Span이 하위 차원의 단면으로 어떻게 지각되는지 체험해 보세요.</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">1단계: 2D 플랫랜드 (3D 구 → 2D 단면)</button>
+    <button class="tab-btn" onclick="switchTab(1)">2단계: 3D 우리의 세계 (4D 초구 & 초입방체 Span → 3D 단면)</button>
+  </div>
+
+  <!-- TAB 1: 2D FLATLAND -->
+  <div id="panel-0" class="section-panel active">
+    <div class="control-bar">
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>제3의 축 스칼라 배수 (z축 위치 / 시간 t)</span>
+          <span id="z-val-display" style="color: var(--blue);">z = 0.00 (단면 반지름 r = 1.00)</span>
+        </div>
+        <input type="range" id="z-slider" min="-1.2" max="1.2" step="0.02" value="0.0" oninput="updateFlatland()" />
+      </div>
+      <button class="play-btn" id="play-btn-1" onclick="togglePlay1()">▶ 자동 통과 애니메이션</button>
+    </div>
+
+    <div class="canvas-grid">
+      <div class="canvas-card">
+        <h3>외부 3차원 관찰자의 시점 (x, y, z 전체 조망)</h3>
+        <p class="desc">3차원 구가 z = 0에 놓인 2차원 플랫랜드 평면(초록색)을 위아래로 통과합니다.</p>
+        <canvas id="canvas-3d-ext" width="460" height="340"></canvas>
+      </div>
+      <div class="canvas-card">
+        <h3>2차원 플랫랜드 주민의 시점 (x, y 평면 내부)</h3>
+        <p class="desc">z축을 볼 수 없는 주민에게는 '시간에 따라 커졌다 작아지는 2차원 원'으로만 보입니다.</p>
+        <canvas id="canvas-2d-int" width="460" height="340"></canvas>
+      </div>
+    </div>
+
+    <div class="math-box">
+      <span class="badge">선형대수적 해석</span>
+      3차원 공간 $\text{Span}\{\mathbf{e}_1, \mathbf{e}_2, \mathbf{e}_3\}$ 안의 구 $x^2 + y^2 + z^2 \le 1$을 2차원 부분공간 $\text{Span}\{\mathbf{e}_1, \mathbf{e}_2\}$에서 관찰하면, 세 번째 기저벡터 $\mathbf{e}_3$의 계수 $z$는 <strong>'공간 밖의 매개변수(시간)'</strong> 역할을 합니다.
+    </div>
+  </div>
+
+  <!-- TAB 2: 4D SPAN -->
+  <div id="panel-1" class="section-panel">
+    <div class="control-bar">
+      <div class="slider-group">
+        <div class="slider-label">
+          <span>제4의 축 스칼라 배수 (w축 계수 c₄ / 시간 t)</span>
+          <span id="w-val-display" style="color: var(--violet);">w = 0.00 (3D 단면 구 반지름 R = 1.00)</span>
+        </div>
+        <input type="range" id="w-slider" min="-1.2" max="1.2" step="0.02" value="0.0" oninput="update4D()" />
+      </div>
+      <button class="play-btn" id="play-btn-2" onclick="togglePlay2()" style="background: var(--violet);">▶ 4D 통과 애니메이션</button>
+    </div>
+
+    <div class="canvas-grid">
+      <div class="canvas-card">
+        <h3>방법 A. 4차원 초입방체(Tesseract) 투영과 w-슬라이스</h3>
+        <p class="desc">독립인 4개 기저벡터 {v₁, v₂, v₃, v₄}가 만드는 4D Span의 그림자와 현재 w 위치(보라색 큐브)</p>
+        <canvas id="canvas-4d-proj" width="460" height="340"></canvas>
+      </div>
+      <div class="canvas-card">
+        <h3>방법 B. 우리의 3차원 세계에 나타난 3D 입체 단면</h3>
+        <p class="desc">4차원 초구(x²+y²+z²+w² ≤ 1)가 우리 공간을 지날 때 3D 구가 생성·팽창·소멸합니다.</p>
+        <canvas id="canvas-3d-slice" width="460" height="340"></canvas>
+      </div>
+    </div>
+
+    <div class="math-box" style="border-left-color: var(--violet);">
+      <span class="badge" style="background: #F3E8FB; color: var(--violet);">4차원 Span의 직관</span>
+      $\mathbf{v} = c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + c_3\mathbf{v}_3 + c_4\mathbf{v}_4$ 에서 $(c_1, c_2, c_3)$는 우리가 보는 3차원 공간이고, 네 번째 스칼라 $c_4(w)$가 변할 때마다 <strong>3차원 공간 전체가 새로운 단면으로 교체</strong>됩니다.
+    </div>
+  </div>
+
+  <script>
+    let anim1 = null, anim2 = null;
+    let dir1 = 1, dir2 = 1;
+
+    function switchTab(idx) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+      document.querySelectorAll('.section-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+      if (idx === 0) updateFlatland();
+      else update4D();
+    }
+
+    // Simple 3D to 2D isometric-like projection helper
+    function project3D(x, y, z, cx, cy, scale, pitch = 0.42, yaw = -0.65) {
+      const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+      const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+      const x1 = x * cosY - y * sinY;
+      const y1 = x * sinY + y * cosY;
+      const px = cx + x1 * scale;
+      const py = cy - (z * cosP - y1 * sinP) * scale;
+      return [px, py];
+    }
+
+    function updateFlatland() {
+      const zVal = parseFloat(document.getElementById('z-slider').value);
+      const rSlice = Math.max(0, Math.sqrt(Math.max(0, 1 - zVal * zVal)));
+      document.getElementById('z-val-display').textContent =
+        `z = ${zVal >= 0 ? '+' : ''}${zVal.toFixed(2)} (단면 반지름 r = ${rSlice.toFixed(2)})`;
+
+      // 1) Draw External 3D View
+      const c1 = document.getElementById('canvas-3d-ext');
+      const ctx1 = c1.getContext('2d');
+      ctx1.clearRect(0, 0, c1.width, c1.height);
+      const cx = c1.width / 2, cy = c1.height / 2 + 10, scale = 105;
+
+      // Draw 2D Flatland plane at z = 0
+      const planePts = [[-1.3, -1.3, 0], [1.3, -1.3, 0], [1.3, 1.3, 0], [-1.3, 1.3, 0]].map(
+        p => project3D(p[0], p[1], p[2], cx, cy, scale)
+      );
+      ctx1.fillStyle = "rgba(14, 158, 143, 0.18)";
+      ctx1.strokeStyle = "#0E9E8F";
+      ctx1.lineWidth = 1.5;
+      ctx1.beginPath();
+      planePts.forEach((p, i) => i === 0 ? ctx1.moveTo(p[0], p[1]) : ctx1.lineTo(p[0], p[1]));
+      ctx1.closePath();
+      ctx1.fill();
+      ctx1.stroke();
+
+      // Draw z-axis
+      const zTop = project3D(0, 0, 1.45, cx, cy, scale);
+      const zBot = project3D(0, 0, -1.45, cx, cy, scale);
+      ctx1.strokeStyle = "#505A74";
+      ctx1.setLineDash([4, 4]);
+      ctx1.beginPath();
+      ctx1.moveTo(zBot[0], zBot[1]);
+      ctx1.lineTo(zTop[0], zTop[1]);
+      ctx1.stroke();
+      ctx1.setLineDash([]);
+
+      // Draw shifted 3D sphere centered at (0, 0, zVal)
+      ctx1.strokeStyle = "rgba(23, 81, 208, 0.28)";
+      ctx1.lineWidth = 1;
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const rad = (lat * Math.PI) / 180;
+        const rLat = Math.cos(rad);
+        const zLat = Math.sin(rad) + zVal;
+        ctx1.beginPath();
+        for (let a = 0; a <= 360; a += 10) {
+          const ar = (a * Math.PI) / 180;
+          const [px, py] = project3D(rLat * Math.cos(ar), rLat * Math.sin(ar), zLat, cx, cy, scale);
+          a === 0 ? ctx1.moveTo(px, py) : ctx1.lineTo(px, py);
+        }
+        ctx1.stroke();
+      }
+      for (let lon = 0; lon < 180; lon += 45) {
+        const lrad = (lon * Math.PI) / 180;
+        ctx1.beginPath();
+        for (let a = 0; a <= 360; a += 10) {
+          const ar = (a * Math.PI) / 180;
+          const x = Math.cos(ar) * Math.cos(lrad);
+          const y = Math.cos(ar) * Math.sin(lrad);
+          const z = Math.sin(ar) + zVal;
+          const [px, py] = project3D(x, y, z, cx, cy, scale);
+          a === 0 ? ctx1.moveTo(px, py) : ctx1.lineTo(px, py);
+        }
+        ctx1.stroke();
+      }
+
+      // Draw intersection circle at z = 0
+      if (rSlice > 0.001) {
+        ctx1.strokeStyle = "#E2661E";
+        ctx1.fillStyle = "rgba(226, 102, 30, 0.35)";
+        ctx1.lineWidth = 3;
+        ctx1.beginPath();
+        for (let a = 0; a <= 360; a += 6) {
+          const ar = (a * Math.PI) / 180;
+          const [px, py] = project3D(rSlice * Math.cos(ar), rSlice * Math.sin(ar), 0, cx, cy, scale);
+          a === 0 ? ctx1.moveTo(px, py) : ctx1.lineTo(px, py);
+        }
+        ctx1.closePath();
+        ctx1.fill();
+        ctx1.stroke();
+      }
+
+      // 2) Draw Internal 2D Flatlander View
+      const c2 = document.getElementById('canvas-2d-int');
+      const ctx2 = c2.getContext('2d');
+      ctx2.clearRect(0, 0, c2.width, c2.height);
+      const cx2 = c2.width / 2, cy2 = c2.height / 2, scale2 = 115;
+
+      // Grid
+      ctx2.strokeStyle = "#E2E6F0";
+      ctx2.lineWidth = 1;
+      ctx2.beginPath();
+      ctx2.moveTo(0, cy2); ctx2.lineTo(c2.width, cy2);
+      ctx2.moveTo(cx2, 0); ctx2.lineTo(cx2, c2.height);
+      ctx2.stroke();
+
+      if (rSlice > 0.001) {
+        ctx2.fillStyle = "rgba(226, 102, 30, 0.28)";
+        ctx2.strokeStyle = "#E2661E";
+        ctx2.lineWidth = 3;
+        ctx2.beginPath();
+        ctx2.arc(cx2, cy2, rSlice * scale2, 0, Math.PI * 2);
+        ctx2.fill();
+        ctx2.stroke();
+      } else {
+        ctx2.fillStyle = "#737D96";
+        ctx2.font = "bold 14px sans-serif";
+        ctx2.textAlign = "center";
+        ctx2.fillText("구가 아직 평면과 만나지 않음 (단면 없음)", cx2, cy2 - 10);
+      }
+    }
+
+    function update4D() {
+      const wVal = parseFloat(document.getElementById('w-slider').value);
+      const rSlice = Math.max(0, Math.sqrt(Math.max(0, 1 - wVal * wVal)));
+      document.getElementById('w-val-display').textContent =
+        `w = ${wVal >= 0 ? '+' : ''}${wVal.toFixed(2)} (3D 단면 구 반지름 R = ${rSlice.toFixed(2)})`;
+
+      // Left: Tesseract Projection & interpolated w-slice cube
+      const c1 = document.getElementById('canvas-4d-proj');
+      const ctx1 = c1.getContext('2d');
+      ctx1.clearRect(0, 0, c1.width, c1.height);
+      const cx = c1.width / 2, cy = c1.height / 2 + 5, scale = 105;
+
+      const verts = [];
+      for (let i = 0; i < 8; i++) {
+        verts.push([
+          (i & 1) ? 1 : -1,
+          (i & 2) ? 1 : -1,
+          (i & 4) ? 1 : -1
+        ]);
+      }
+      const edges = [];
+      for (let i = 0; i < 8; i++) {
+        for (let j = i + 1; j < 8; j++) {
+          let diff = 0;
+          for (let k = 0; k < 3; k++) if (verts[i][k] !== verts[j][k]) diff++;
+          if (diff === 1) edges.push([i, j]);
+        }
+      }
+
+      function drawCube(scaleFactor, stroke, lw, dash = []) {
+        ctx1.strokeStyle = stroke;
+        ctx1.lineWidth = lw;
+        ctx1.setLineDash(dash);
+        edges.forEach(([i, j]) => {
+          const p1 = project3D(verts[i][0]*scaleFactor, verts[i][1]*scaleFactor, verts[i][2]*scaleFactor, cx, cy, scale);
+          const p2 = project3D(verts[j][0]*scaleFactor, verts[j][1]*scaleFactor, verts[j][2]*scaleFactor, cx, cy, scale);
+          ctx1.beginPath();
+          ctx1.moveTo(p1[0], p1[1]);
+          ctx1.lineTo(p2[0], p2[1]);
+          ctx1.stroke();
+        });
+        ctx1.setLineDash([]);
+      }
+
+      // Outer cube (w = +1) & Inner cube (w = -1)
+      drawCube(1.0, "rgba(23, 81, 208, 0.45)", 1.5);
+      drawCube(0.45, "rgba(226, 102, 30, 0.45)", 1.5);
+
+      // Connect 4th dimension edges
+      ctx1.strokeStyle = "rgba(145, 23, 208, 0.35)";
+      ctx1.setLineDash([3, 3]);
+      for (let i = 0; i < 8; i++) {
+        const pOut = project3D(verts[i][0], verts[i][1], verts[i][2], cx, cy, scale);
+        const pIn = project3D(verts[i][0]*0.45, verts[i][1]*0.45, verts[i][2]*0.45, cx, cy, scale);
+        ctx1.beginPath();
+        ctx1.moveTo(pIn[0], pIn[1]);
+        ctx1.lineTo(pOut[0], pOut[1]);
+        ctx1.stroke();
+      }
+      ctx1.setLineDash([]);
+
+      // Active w-slice cube if |w| <= 1
+      if (Math.abs(wVal) <= 1.0) {
+        const t = (wVal + 1) / 2; // 0 to 1
+        const sActive = 0.45 + t * (1.0 - 0.45);
+        drawCube(sActive, "#9117D0", 3.0);
+      }
+
+      // Right: 3D Hypersphere slice in our 3D world
+      const c2 = document.getElementById('canvas-3d-slice');
+      const ctx2 = c2.getContext('2d');
+      ctx2.clearRect(0, 0, c2.width, c2.height);
+
+      // Draw 3D coordinate axes
+      const axes = [[[0,0,0],[1.3,0,0],"X"], [[0,0,0],[0,1.3,0],"Y"], [[0,0,0],[0,0,1.3],"Z"]];
+      ctx2.strokeStyle = "#CDD3E0";
+      ctx2.lineWidth = 1.5;
+      axes.forEach(([p0, p1, lbl]) => {
+        const a0 = project3D(p0[0], p0[1], p0[2], cx, cy, scale);
+        const a1 = project3D(p1[0], p1[1], p1[2], cx, cy, scale);
+        ctx2.beginPath();
+        ctx2.moveTo(a0[0], a0[1]);
+        ctx2.lineTo(a1[0], a1[1]);
+        ctx2.stroke();
+        ctx2.fillStyle = "#505A74";
+        ctx2.font = "bold 12px sans-serif";
+        ctx2.fillText(lbl, a1[0] + 4, a1[1] + 4);
+      });
+
+      if (rSlice > 0.001) {
+        // Shaded 3D sphere silhouette + wireframe
+        ctx2.fillStyle = "rgba(145, 23, 208, 0.20)";
+        ctx2.strokeStyle = "#9117D0";
+        ctx2.lineWidth = 2;
+        ctx2.beginPath();
+        ctx2.arc(cx, cy, rSlice * scale, 0, Math.PI * 2);
+        ctx2.fill();
+        ctx2.stroke();
+
+        // Latitude/longitude lines on 3D slice sphere
+        ctx2.strokeStyle = "rgba(145, 23, 208, 0.45)";
+        ctx2.lineWidth = 1;
+        for (let lat = -45; lat <= 45; lat += 45) {
+          const rad = (lat * Math.PI) / 180;
+          const rL = rSlice * Math.cos(rad);
+          const zL = rSlice * Math.sin(rad);
+          ctx2.beginPath();
+          for (let a = 0; a <= 360; a += 8) {
+            const ar = (a * Math.PI) / 180;
+            const [px, py] = project3D(rL * Math.cos(ar), rL * Math.sin(ar), zL, cx, cy, scale);
+            a === 0 ? ctx2.moveTo(px, py) : ctx2.lineTo(px, py);
+          }
+          ctx2.stroke();
+        }
+      } else {
+        ctx2.fillStyle = "#737D96";
+        ctx2.font = "bold 14px sans-serif";
+        ctx2.textAlign = "center";
+        ctx2.fillText("4차원 초구가 현재 3D 공간(w)을 벗어남", cx, cy - 10);
+      }
+    }
+
+    function togglePlay1() {
+      const btn = document.getElementById('play-btn-1');
+      if (anim1) {
+        clearInterval(anim1);
+        anim1 = null;
+        btn.textContent = "▶ 자동 통과 애니메이션";
+      } else {
+        btn.textContent = "⏸ 일시정지";
+        anim1 = setInterval(() => {
+          const s = document.getElementById('z-slider');
+          let v = parseFloat(s.value) + 0.03 * dir1;
+          if (v >= 1.2) { v = 1.2; dir1 = -1; }
+          if (v <= -1.2) { v = -1.2; dir1 = 1; }
+          s.value = v;
+          updateFlatland();
+        }, 40);
+      }
+    }
+
+    function togglePlay2() {
+      const btn = document.getElementById('play-btn-2');
+      if (anim2) {
+        clearInterval(anim2);
+        anim2 = null;
+        btn.textContent = "▶ 4D 통과 애니메이션";
+      } else {
+        btn.textContent = "⏸ 일시정지";
+        anim2 = setInterval(() => {
+          const s = document.getElementById('w-slider');
+          let v = parseFloat(s.value) + 0.03 * dir2;
+          if (v >= 1.2) { v = 1.2; dir2 = -1; }
+          if (v <= -1.2) { v = -1.2; dir2 = 1; }
+          s.value = v;
+          update4D();
+        }, 40);
+      }
+    }
+
+    updateFlatland();
+    update4D();
+  </script>
+</body>
+</html>
